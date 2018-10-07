@@ -1,6 +1,7 @@
 GIT
   remote: https://github.com/everypolitician/scraped.git
-  revision: 7fd43913456af49d32e882d0cb79f3da1f5117ef
+  revision: ecb23adeca95fba5356509d6445d528e212b3905
+  branch: scraper-class
   specs:
     scraped (0.6.2)
       field_serializer (>= 0.3.0)
@@ -41,7 +42,7 @@ GEM
     mime-types-data (3.2018.0812)
     mini_portile2 (2.3.0)
     netrc (0.11.0)
-    nokogiri (1.8.4)
+    nokogiri (1.8.5)
       mini_portile2 (~> 2.3.0)
     parallel (1.12.1)
     parser (2.5.1.2)
