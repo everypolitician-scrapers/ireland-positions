@@ -1,9 +1,9 @@
-# TODO: extending Scraped::Scraper with ability to add Strategies
+# TODO: extend Scraped::Scraper with ability to add Strategies
 class Scraped::Request::Strategy::LiveRequest
   require 'rest-client'
 
   def url
-    SPARQL_URL % CGI.escape(QUERY % @url)
+    SPARQL_URL % CGI.escape(QUERY % [@url, @url])
   end
 
   private
@@ -18,16 +18,23 @@ class Scraped::Request::Strategy::LiveRequest
   SPARQL_URL = 'https://query.wikidata.org/sparql?format=json&query=%s'
 
   QUERY = <<~SPARQL
-    SELECT DISTINCT ?ps ?item ?itemLabel ?minister ?ministerLabel ?ordinal ?start ?end ?cabinet ?cabinetLabel
-    WHERE {
-      ?item p:P39/ps:P39 wd:%s .
-      ?item p:P39 ?ps .
-      ?ps ps:P39 ?minister .
-      ?minister wdt:P279* wd:Q83307 .
-      OPTIONAL { ?ps pq:P1545 ?ordinal }
-      OPTIONAL { ?ps pq:P580  ?start }
-      OPTIONAL { ?ps pq:P582  ?end }
-      OPTIONAL { ?ps pq:P5054 ?cabinet }
+    SELECT DISTINCT ?ps ?item ?itemLabel ?minister ?ministerLabel ?ordinal ?start ?end ?cabinet ?cabinetLabel {
+      {
+        SELECT DISTINCT ?ps ?item ?minister ?ordinal ?start ?end ?cabinet {
+          ?item p:P39/ps:P39 wd:%s .
+          ?item p:P39 ?ps .
+          ?ps ps:P39 ?minister .
+          ?minister wdt:P279* wd:Q83307 .
+          OPTIONAL { ?ps pq:P1545 ?ordinal }
+          OPTIONAL { ?ps pq:P580  ?start }
+          OPTIONAL { ?ps pq:P582  ?end }
+
+          # Ignore anything with a different jurisdiction
+          OPTIONAL { wd:%s wdt:P1001 ?legislative_jurisdiction }
+          OPTIONAL { ?minister wdt:P1001 ?executive_jurisdiction }
+          FILTER (!BOUND(?legislative_jurisdiction) || !BOUND(?executive_jurisdiction) || (?legislative_jurisdiction = ?executive_jurisdiction))
+        }
+      }
       SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
     }
   SPARQL
